@@ -216,7 +216,7 @@ static void uv__stop(uv_async_t *handle) {
 }
 
 void TJS_DefaultOptions(TJSRunOptions *options) {
-    static TJSRunOptions default_options = { .mem_limit = 0, .stack_size = TJS__DEFAULT_STACK_SIZE };
+    static TJSRunOptions default_options = { .idle_cb = NULL, .mem_limit = 0, .stack_size = TJS__DEFAULT_STACK_SIZE };
 
     memcpy(options, &default_options, sizeof(*options));
 }
@@ -405,15 +405,19 @@ TJSRuntime *TJS_GetRuntime(JSContext *ctx) {
     return JS_GetContextOpaque(ctx);
 }
 
+// MONKEYPATCH: Call custom callback if defined
 static void uv__idle_cb(uv_idle_t *handle) {
-    // Noop
+    TJSRuntime *qrt = handle->data;
+    if (qrt && qrt->options.idle_cb) {
+        qrt->options.idle_cb(handle);
+    }
 }
 
+// MONKEYPATCH: Let Event Loop continue forever and
+// invoke idle callback if microtask queue is empty
 static void uv__maybe_idle(TJSRuntime *qrt) {
-    if (JS_IsJobPending(qrt->rt)) {
+    if (!JS_IsJobPending(qrt->rt)) {
         CHECK_EQ(uv_idle_start(&qrt->jobs.idle, uv__idle_cb), 0);
-    } else {
-        CHECK_EQ(uv_idle_stop(&qrt->jobs.idle), 0);
     }
 }
 
@@ -454,6 +458,11 @@ static void uv__check_cb(uv_check_t *handle) {
 
 /* main loop which calls the user JS callbacks */
 int TJS_Run(TJSRuntime *qrt) {
+    return TJS_RunWithIdleCallback(qrt, NULL);
+}
+
+int TJS_RunWithIdleCallback(TJSRuntime *qrt, void (*idle_cb)(uv_idle_t *handle)) {
+    qrt->options.idle_cb = idle_cb;
     int ret = 0;
 
     CHECK_EQ(uv_prepare_start(&qrt->jobs.prepare, uv__prepare_cb), 0);

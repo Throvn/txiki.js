@@ -33,6 +33,7 @@ typedef struct TJSRuntime TJSRuntime;
 typedef struct TJSRunOptions {
     int mem_limit;
     size_t stack_size;
+    void (*idle_cb)(uv_idle_t *handle);
 } TJSRunOptions;
 
 void TJS_DefaultOptions(TJSRunOptions *options);
