@@ -458,11 +458,6 @@ static void uv__check_cb(uv_check_t *handle) {
 
 /* main loop which calls the user JS callbacks */
 int TJS_Run(TJSRuntime *qrt) {
-    return TJS_RunWithIdleCallback(qrt, NULL);
-}
-
-int TJS_RunWithIdleCallback(TJSRuntime *qrt, void (*idle_cb)(uv_idle_t *handle)) {
-    qrt->options.idle_cb = idle_cb;
     int ret = 0;
 
     CHECK_EQ(uv_prepare_start(&qrt->jobs.prepare, uv__prepare_cb), 0);
