@@ -27,6 +27,7 @@
 #define TJS_H
 
 #include <quickjs.h>
+#include <uv.h>
 
 typedef struct TJSRuntime TJSRuntime;
 
