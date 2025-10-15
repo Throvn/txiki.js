@@ -45,6 +45,7 @@ void TJS_Initialize(int argc, char **argv);
 JSContext *TJS_GetJSContext(TJSRuntime *qrt);
 TJSRuntime *TJS_GetRuntime(JSContext *ctx);
 int TJS_Run(TJSRuntime *qrt);
+int TJS_RunWithIdleCallback(TJSRuntime *qrt, void (*idle_cb)(uv_idle_t *handler));
 void TJS_Stop(TJSRuntime *qrt);
 
 #endif
